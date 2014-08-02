@@ -290,6 +290,7 @@ This section defines the fields that are used to construct transaction messages.
     *   62: [Respond to a Buyer Offer](#accepting-a-buyer)
     *   63: [Release Funds and Leave Feedback](#leaving-feedback)
     * 100: [Create a New Child Currency](#new-currency-creation)
+    * xxx: [Multi Send](#transfer-coins-multi-send)
 
 ### Field: Transaction version
 + Description: the version of the transaction definition, monotonically increasing independently for each transaction type
@@ -662,6 +663,29 @@ Note that attempts to participate in a closed crowdsale will result in no invest
 # Future Transactions
 
 The transactions below are still subject to revision and therefore are not included in deployments based on this version of the spec. 
+
+### Transfer Coins (Multi Send)
+
+Description: Transaction type xxx transfers coins in the specified currency from the sending address to the reference public key, defined in [Appendix A](#appendix-a-storing-mastercoin-data-in-the-blockchain). This transaction can not be used to transfer bitcoins.
+
+The primary difference from the Simple Send transaction type is that a Multi Send requires that the sender encode the Master Protocol packets as a Class D Master Protocol transaction. Since Class D transactions only need a single output to encode Master Protocol transactions that require less than or equal to 30 bytes, multiple Multi Sends packets can be included in a single Bitcoin transaction. In this manner, coins of multiple types can be sent to multiple recipients in a single transaction.
+
+In addition to the validity constraints on the message field datatypes, the transaction is invalid if any of the following conditions is true for any of the Master Protocol packets included:
+* the sending address has zero coins in its available balance for the specified currency identifier
+* the amount to transfer exceeds the number owned and available by the sending address
+* the specified currency identifier is non-existent
+* the specified currency identifier is 0 (bitcoin)
+
+A Multi Send to a non-existent address will destroy the coins in question, just like it would with bitcoin.
+
+[Future: Note that if the transfer comes from an address which has been marked as “Savings”, there is a time window in which the transfer can be undone.]
+
+Say you want to transfer 1 Mastercoin to another address. Only 16 bytes are needed. The data stored is:
+
+1. [Transaction version](#field-transaction-version) = 0
+1. [Transaction type](#field-transaction-type) = xxx
+1. [Currency identifier](#field-currency-identifier) = 1 for Mastercoin 
+1. [Amount to transfer](#field-number-of-coins) = 100,000,000 (1.00000000 Mastercoins)
 
 ## Transactions to Limit Funds (Theft Prevention)
 
